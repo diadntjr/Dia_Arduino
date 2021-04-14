@@ -15,5 +15,5 @@ void loop() {
     digitalWrite(Pin[loc], HIGH);
     loc++;
     loc %= 8;
-    delay(50);
+    delay(250);
  }

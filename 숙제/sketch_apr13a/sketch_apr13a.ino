@@ -1,31 +1,34 @@
 byte Pin[] = {2,3,4,5,6,7,8,9};
 byte Pin_num = sizeof(Pin) / sizeof(byte);
-int i =2;
+int i = 2;
 
 void setup() {
-  for(int i = 0; i<Pin_num; i++) {
-    pinMode(Pin[i], OUTPUT); 
+  for(int j = 0; j<Pin_num; j++) {
+    pinMode(Pin[j], OUTPUT); 
   }
 }
 
 void loop() {
-  static int loc;
-  if(i==8) {
-    while(i==2) {
-      loc = Pin[i];
-      digitalWrite(loc, HIGH);
-      delay(100);
-      digitalWrite(loc, LOW);
-      i--
+  if(i==9) {
+    while(1) {
+      if(i==2) {
+        break;
+      }
+      digitalWrite(Pin[i-2], HIGH);
+      delay(500);
+      digitalWrite(Pin[i-2], LOW);
+      i--;
     }
   }
   if(i==2){
-    while(i==8) {
-      loc = Pin[i];
-      digitalWrite(loc, HIGH);
-      delay(100);
-      digitalWrite(loc, LOW);
-      i++
+    while(1) {
+      if(i==9) {
+        break;
+      }
+      digitalWrite(Pin[i-2],HIGH);
+      delay(500);
+      digitalWrite(Pin[i-2], LOW);
+      i++;
     }
   }
 }
