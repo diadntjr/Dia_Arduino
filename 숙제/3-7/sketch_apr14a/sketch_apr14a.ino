@@ -12,9 +12,23 @@ void setup() {
 }
 
 int function(int receiveNumber) {
-  for (int i = 3; i >= 0; i--) { //8자리 숫자까지 나타냄
-        Pin_ON[i] = receiveNumber >> i;
+    for (int i = 3; i >= 0; i--) { 
+        Pin_ON[i] = receiveNumber >> i & 1;
     }
+    return 0;
+}
+
+int function2() {
+   for(int i = 0; i < 4; i++) {
+    if(Pin_ON[i] >= 1) {
+      digitalWrite(i+2, HIGH);
+      Pin_ON[i] = 0;
+    }
+    else {
+      digitalWrite(i+2, LOW);
+    }
+  }
+   delay(1000);
   return 0;
 }
 
@@ -23,16 +37,6 @@ void loop() {
   if(sendNumber == 16) {
     sendNumber = 0;
   }
-  for(int i = 0; i<=4; i++) {
-    if(Pin_ON[i] == 1) {
-      digitalWrite(i+2, HIGH);
-      delay(500);
-      Pin_ON[i] = 0;
-    }
-    else {
-      digitalWrite(i+2, LOW);
-      delay(500);
-    }
-  }
+  function2();
   sendNumber++;
 }
