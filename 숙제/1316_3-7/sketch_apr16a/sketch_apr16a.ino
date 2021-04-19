@@ -25,7 +25,7 @@ int function(int receiveNumber) {
         receiveNumber = receiveNumber - (receiveNumber / 2);
       }
     }
-    return 0;
+    return receiveNumber;
 }
 
 int function2() {
