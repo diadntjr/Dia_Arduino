@@ -15,7 +15,7 @@ int function(int receiveNumber) {
     for (int i = 3; i >= 0; i--) { 
         Pin_ON[i] = receiveNumber >> i & 1;
     }
-    return 0;
+    return receiveNumber;
 }
 
 int function2() {
