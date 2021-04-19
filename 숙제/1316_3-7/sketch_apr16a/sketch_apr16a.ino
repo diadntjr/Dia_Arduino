@@ -13,7 +13,7 @@ void setup() {
 
 int function(int receiveNumber) {
     for(int i =3; i>=0; i--) {
-      if(receiveNumber == 1 && receiveNumber == 0) {
+      if(receiveNumber == 0) {
         break;
       }
       count = receiveNumber % 2;
@@ -25,12 +25,12 @@ int function(int receiveNumber) {
         receiveNumber = receiveNumber - (receiveNumber / 2);
       }
     }
-    return receiveNumber;
+    return 0;
 }
 
 int function2() {
    for(int i = 0; i < 4; i++) {
-    if(Pin_ON[i] >= 1) {
+    if(Pin_ON[i] == 1) {
       digitalWrite(i+2, HIGH);
       Pin_ON[i] = 0;
     }
