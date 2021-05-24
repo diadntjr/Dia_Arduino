@@ -1,5 +1,5 @@
 #include <stdio.h>
-byte Pin[] = {2,3,4,5,6,7,8,9};
+byte Pin[] = {4,5,6,7,8,9,10,11};
 byte Pin_num = sizeof(Pin) / sizeof(byte);
 byte sendNumber = 0;
 byte count = 0;
@@ -21,14 +21,14 @@ int function(int receiveNumber) {
 int function2() {
    for(int i = 0; i < 8; i++) {
     if(Pin_ON[i] >= 1) {
-      digitalWrite(i+2, HIGH);
+      digitalWrite(i+4, HIGH);
       Pin_ON[i] = 0;
     }
     else {
-      digitalWrite(i+2, LOW);
+      digitalWrite(i+4, LOW);
     }
   }
-   delay(1000);
+   delay(200);
   return 0;
 }
 
