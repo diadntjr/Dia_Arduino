@@ -3,7 +3,7 @@ int pin[] = {2,3,4,5,6,7,8,9};
 void setup()
 {
   Serial.begin(9600);
-  for(int i = 2; i!=10; i++)  {
+  for(int i = 0; i!=8; i++)  {
    pinMode(pin[i],OUTPUT);
   }
 }
