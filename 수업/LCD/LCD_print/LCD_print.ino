@@ -1,5 +1,5 @@
 #include <LiquidCrystal_I2C.h>
-LiquidCrystal_I2C lcd(0x7f,16,2);
+LiquidCrystal_I2C lcd(0x27,16,2);
 
 void setup() {
   lcd.begin();
@@ -9,6 +9,6 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  
 
 }
