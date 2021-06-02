@@ -1,12 +1,10 @@
-
+#include <Wire.h>
 
 #include "RTClib.h"
 
-#include <Wire.h>
-
 RTC_DS1307 RTC;
 
-//char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday","Wednesday", "Thursday", "Friday", "Saturday"};
 
 // 요일이 틀리면 순서를 바꿔줍니다. 
 
@@ -19,8 +17,15 @@ void setup () {
   Wire.begin();
 
   RTC.begin();
+  if(! RTC.begin()) {
+    Serial.println("Couldn't find RTC");
+    while (1);
+  }
 
-  RTC.adjust(DateTime("Jun 02 2021", "17:13:00"));    
+  if(! RTC.isrunning()) {
+    Serial.println("RTC is NOT running");
+  }
+ // RTC.adjust(DateTime(F(__DATE__),F(__TIME__)));    
 
   /*현재시간을 설정할 수 있습니다. 시간 설정시 앞의 //를 지운 후 업로드한 후 다시 //를 넣고 업로드해주세요.
 
@@ -84,7 +89,7 @@ void loop () {
 
   Serial.print(' ');
 
-//  Serial.print(daysOfTheWeek[now.dayOfTheWeek()]);   // 요일
+  Serial.print(daysOfTheWeek[now.dayOfTheWeek()]);   // 요일
 
   Serial.println();
 
