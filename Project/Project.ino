@@ -95,15 +95,16 @@ void function() {
   if(digitalRead(LeftSwitch) == 0 || digitalRead(RightSwitch) == 0) {
     InterfaceOn();
   }
-  if(time - past >= 1000) {
+  /*if(time - past >= 1000) {
     past = time;
     flag = 1;
   }
-  if(flag == 1) {
+  if(flag == 1) {*/
+  delay(1000);
   lcd.clear();
   lcd.print("Function ON");
   function();
-}
+//}
 }
 
 void automatic() {
@@ -112,18 +113,24 @@ void automatic() {
   if(digitalRead(LeftSwitch) == 0 || digitalRead(RightSwitch) == 0) {
     InterfaceOn();
   }
-  if(time - past >= 1000) {
+  /*if(time - past >= 1000) {
     past = time;
     flag = 1;
   }
-  if(flag == 1){
+  if(flag == 1){*/
+  delay(1000);
   lcd.clear();
   lcd.print("automatic ON");
   automatic();
-}
+//}
 }
 
 void InterfaceOn() {
+  lcd.clear();
+  lcd.print("Loading...");
+  lcd.setCursor(0,1);
+  lcd.print(count);
+  delay(1000);
   if(digitalRead(LeftSwitch) == 0) {
     count++;
   }
