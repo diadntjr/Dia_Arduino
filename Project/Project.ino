@@ -8,7 +8,7 @@ LiquidCrystal_I2C lcd(0x27,16,2);
 
 #include <Wire.h>
 
-#include "RTClib.h"
+#include <RTClib.h>
 
 RTC_DS1307 RTC;
 
@@ -16,6 +16,12 @@ char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday","Wednesday", "Thursda
 
 static int firstCount = 1;
 static int count = 1;
+
+unsigned long past = 0;
+int flag = 0;
+unsigned long time = millis();
+
+void InterfaceOn();
 
 void LetStart();
 
@@ -35,19 +41,27 @@ void setup() {
   if(! RTC.isrunning()) {
     Serial.println("RTC is NOT running");
   }
+
   lcd.begin();
   lcd.backlight();
-  pinMode(LeftSwitch,INPUT);
-  pinMode(MiddleSwitch,INPUT);
-  pinMode(RightSwitch,INPUT);
+  pinMode(LeftSwitch,INPUT_PULLUP);
+  pinMode(MiddleSwitch,INPUT_PULLUP);
+  pinMode(RightSwitch,INPUT_PULLUP);
   LetStart();
 }
 
 void Time() {
-  lcd.clear();
   DateTime now = RTC.now();
   int Day = now.day();
-  if(digitalRead(MiddleSwitch) == 1) {
+  time = millis();
+  if(time - past >= 1000) {
+    past = time;
+    flag = 1;
+  }
+  if(digitalRead(LeftSwitch) == 0 || digitalRead(RightSwitch) == 0) {
+    InterfaceOn();
+  }
+  if(digitalRead(MiddleSwitch) == 0) {
     lcd.clear();
   lcd.print(now.year(), DEC);
   lcd.print("/");
@@ -56,12 +70,10 @@ void Time() {
   lcd.print(Day);
   lcd.setCursor(0,1);
   lcd.print(daysOfTheWeek[now.dayOfTheWeek()]);
-  delay(2000);
-  if(now.day()!=Day) {
-    Time();
+  delay(3000);
   }
-  if(digitalRead(MiddleSwitch) == 1) Time();
-  }
+  if(flag == 1) {
+  lcd.clear();
   lcd.print("Now time is:");
   lcd.setCursor(0,1);
   lcd.print(now.hour(),DEC);
@@ -69,11 +81,55 @@ void Time() {
   lcd.print(now.minute(),DEC);
   lcd.print(":");
   lcd.print(now.second(),DEC);
-  delay(100);
+  flag = 0;
   Time();
+  }
+  else {
+    Time();
+  }
+}
+
+void function() {
+  flag = 0;
+  time = millis();
+  if(digitalRead(LeftSwitch) == 0 || digitalRead(RightSwitch) == 0) {
+    InterfaceOn();
+  }
+  if(time - past >= 1000) {
+    past = time;
+    flag = 1;
+  }
+  if(flag == 1) {
+  lcd.clear();
+  lcd.print("Function ON");
+  function();
+}
+}
+
+void automatic() {
+  flag = 0;
+  time = millis();
+  if(digitalRead(LeftSwitch) == 0 || digitalRead(RightSwitch) == 0) {
+    InterfaceOn();
+  }
+  if(time - past >= 1000) {
+    past = time;
+    flag = 1;
+  }
+  if(flag == 1){
+  lcd.clear();
+  lcd.print("automatic ON");
+  automatic();
+}
 }
 
 void InterfaceOn() {
+  if(digitalRead(LeftSwitch) == 0) {
+    count++;
+  }
+  else if (digitalRead(RightSwitch) == 0){
+    count--;
+  }
   if(count>3) {
     count = 1;
   }
@@ -84,12 +140,12 @@ void InterfaceOn() {
   Time();
   }
   else if(count==2){
-  functure();
+   function();
   }
-  else {
-    automatic();
-  }
-  
+  else if(count==3){
+   automatic();
+  } 
+   InterfaceOn();
 } 
 
 void first() {
