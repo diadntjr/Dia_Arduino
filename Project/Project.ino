@@ -16,9 +16,8 @@ RTC_DS1307 RTC;
 
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday","Wednesday", "Thursday", "Friday", "Saturday"};
 
-static int firstCount = 1;
+static int firstCount = 0;
 static int InterfaceCount = 1;
-static int functionCount = 1;
 
 unsigned long past = 0;
 int flag = 0;
@@ -26,6 +25,17 @@ unsigned long time = millis();
 
 float temp, humi;
 int err;
+
+int measurePin = A0;
+int ledPower = 6;
+
+int samplingTime = 280;
+int deltaTime = 40;
+int sleepTime = 9680;
+
+float voMeasured = 0.0;
+float calcVoltage = 0.0;
+float dustDensity = 0.0;
 
 void InterfaceOn();
 
@@ -53,6 +63,7 @@ void setup() {
   pinMode(LeftSwitch,INPUT_PULLUP);
   pinMode(MiddleSwitch,INPUT_PULLUP);
   pinMode(RightSwitch,INPUT_PULLUP);
+  pinMode(ledPower,OUTPUT);
   LetStart();
 }
 
@@ -95,8 +106,69 @@ void Time() {
   }
 }
 
-void function_DHT11() {
+void function();
+
+void function_MoterOn() {
+  if(digitalRead(MiddleSwitch)==0) {
+    function();
+  }
+}
+
+void function_RaindropsModule() {
+  if(digitalRead(MiddleSwitch)==0) {
+    function_MoterOn();
+  }
+}
+
+void function_PMSensor() {
+  past = 0;
+  flag = 0;
+  time = millis();
+  if(time - past >= 2000) {
+    past = time;
+    flag = 1;
+  }
+  if(digitalRead(MiddleSwitch)==0) {
+    function_RaindropsModule();
+  }
+  if(flag == 1) {
+  digitalWrite(ledPower,LOW);
+  delayMicroseconds(samplingTime);
+
+  voMeasured = analogRead(measurePin);
+  delayMicroseconds(deltaTime);
+  digitalWrite(ledPower,HIGH);
+  delayMicroseconds(sleepTime);
+
+  calcVoltage = voMeasured * (5.0/1024.0);
+
+  dustDensity = 0.17 * calcVoltage - 0.1;
+
   lcd.clear();
+  lcd.print("DustDensity: ");
+  lcd.setCursor(0,1);
+  lcd.print(dustDensity);
+  flag = 0;
+  function_PMSensor();
+  }
+  else {
+    function_PMSensor();
+  }
+}
+
+void function_DHT11() {
+  past = 0;
+  flag = 0;
+  time = millis();
+  if(time - past >= 3000) {
+    past = time;
+    flag = 1;
+  }
+  lcd.clear();
+  if(digitalRead(MiddleSwitch)==0) {
+    function_PMSensor();
+  }
+  if(flag == 1) {
   if((err=dht11.read(humi, temp))==0) {
     lcd.print("temp: ");
     lcd.print(temp);
@@ -107,8 +179,12 @@ void function_DHT11() {
   else {
     lcd.print("Error No:");
   }
-  delay(5000);
+  flag = 0;
   function_DHT11();
+  }
+  else {
+  function_DHT11();
+  }
 }
 
 void function() {
