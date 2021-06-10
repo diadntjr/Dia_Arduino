@@ -1,32 +1,38 @@
+#include <DHT11.h>
+#include <Wire.h>
+#include <RTClib.h>
+#include <LiquidCrystal_I2C.h>
+
 #define MiddleSwitch 10
 #define LeftSwitch 11
 #define RightSwitch 9
+#define DHTPin 12
 
-#include <LiquidCrystal_I2C.h>
+DHT11 dht11(DHTPin);
 
 LiquidCrystal_I2C lcd(0x27,16,2);
-
-#include <Wire.h>
-
-#include <RTClib.h>
 
 RTC_DS1307 RTC;
 
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday","Wednesday", "Thursday", "Friday", "Saturday"};
 
 static int firstCount = 1;
-static int count = 1;
+static int InterfaceCount = 1;
+static int functionCount = 1;
 
 unsigned long past = 0;
 int flag = 0;
 unsigned long time = millis();
+
+float temp, humi;
+int err;
 
 void InterfaceOn();
 
 void LetStart();
 
 void setup() {
-  Serial.begin(9600);
+   Serial.begin(9600);
 
   Wire.begin();
 
@@ -89,70 +95,99 @@ void Time() {
   }
 }
 
+void function_DHT11() {
+  lcd.clear();
+  if((err=dht11.read(humi, temp))==0) {
+    lcd.print("temp: ");
+    lcd.print(temp);
+    lcd.setCursor(0,1);
+    lcd.print("humi: ");
+    lcd.print(humi);
+  }
+  else {
+    lcd.print("Error No:");
+  }
+  delay(5000);
+  function_DHT11();
+}
+
 void function() {
+  past = 0;
   flag = 0;
   time = millis();
-  if(digitalRead(LeftSwitch) == 0 || digitalRead(RightSwitch) == 0) {
-    InterfaceOn();
-  }
-  /*if(time - past >= 1000) {
+  if(time - past >= 1000) {
     past = time;
     flag = 1;
   }
-  if(flag == 1) {*/
-  delay(1000);
   lcd.clear();
-  lcd.print("Function ON");
-  function();
-//}
+  if(digitalRead(LeftSwitch) == 0 || digitalRead(RightSwitch) == 0) {
+    InterfaceOn();
+  }
+  if(digitalRead(MiddleSwitch)==0) {
+    delay(300);
+    function_DHT11();
+  }
+  if(flag == 1) {
+  lcd.print("Function Mode");
+  flag = 0;
+  }
+  else {
+    function();
+  }
 }
 
 void automatic() {
+  past = 0;
   flag = 0;
   time = millis();
   if(digitalRead(LeftSwitch) == 0 || digitalRead(RightSwitch) == 0) {
     InterfaceOn();
   }
-  /*if(time - past >= 1000) {
+  if(time - past >= 1000) {
     past = time;
     flag = 1;
   }
-  if(flag == 1){*/
-  delay(1000);
+  if(flag == 1){
   lcd.clear();
   lcd.print("automatic ON");
-  automatic();
-//}
+  flag = 0;
+}
+else {
+automatic();
+}
 }
 
 void InterfaceOn() {
+  if(digitalRead(LeftSwitch) == 0) {
+    delay(300);
+    InterfaceCount++;
+  }
+  else if (digitalRead(RightSwitch) == 0){
+    delay(300);
+    InterfaceCount--;
+  }
+  if(InterfaceCount>3) {
+    InterfaceCount = 1;
+  }
+  else if(InterfaceCount < 1) {
+    InterfaceCount = 3;
+  }
+   /*if(flag == 1) { //테스트 용 LCD 출력
   lcd.clear();
   lcd.print("Loading...");
   lcd.setCursor(0,1);
   lcd.print(count);
-  delay(1000);
-  if(digitalRead(LeftSwitch) == 0) {
-    count++;
+  }*/
+  if(InterfaceCount == 1) {
+   Time();
   }
-  else if (digitalRead(RightSwitch) == 0){
-    count--;
-  }
-  if(count>3) {
-    count = 1;
-  }
-  else if(count < 1) {
-    count = 3;
-  }
-  if(count == 1) {
-  Time();
-  }
-  else if(count==2){
+  else if(InterfaceCount==2){
    function();
   }
-  else if(count==3){
+  else if(InterfaceCount==3){
    automatic();
   } 
-   InterfaceOn();
+  InterfaceOn();
 } 
 
 void first() {
