@@ -9,6 +9,9 @@ extern volatile unsigned long timer0_millis;
 #define LeftSwitch 11
 #define RightSwitch 9
 #define DHTPin A1
+#define in3 13
+#define in4 12
+#define speedPin 2
 
 DHT11 dht11(DHTPin);
 
@@ -40,6 +43,8 @@ int sleepTime = 9680;
 float voMeasured = 0.0;
 float calcVoltage = 0.0;
 float dustDensity = 0.0;
+
+int windowsOpen = 0;
 
 void InterfaceOn();
 
@@ -114,8 +119,76 @@ void Time() {
 void function();
 
 void function_MoterOn() {
+  flag = 0;
+  time = millis();
+  if(time - past >= 2000) {
+    past = time;
+    flag = 1;
+  }
+   if(digitalRead(RightSwitch)==0) {
+     if(windowsOpen == 0) {
+      lcd.clear();
+      lcd.print("Opening...");
+      digitalWrite(in3,HIGH);
+      digitalWrite(in4,LOW);
+      analogWrite(speedPin,50);
+      delay(3000);
+      digitalWrite(in3,HIGH);
+      digitalWrite(in4,HIGH);
+      lcd.clear();
+      lcd.print("done!");
+      windowsOpen++;
+      delay(1000);
+    }
+   }
+  else if (digitalRead(LeftSwitch)==0 && windowsOpen == 0){
+      lcd.clear();
+      lcd.print("Already close!");
+      delay(1000);
+    }
+  if(digitalRead(LeftSwitch)==0) {
+    if(windowsOpen == 1) {
+      lcd.clear();
+      lcd.print("Closing...");
+      digitalWrite(in3,LOW);
+      digitalWrite(in4,HIGH);
+      analogWrite(speedPin,50);
+      delay(3000);
+      digitalWrite(in3,HIGH);
+      digitalWrite(in4,HIGH);
+      lcd.clear();
+      lcd.print("done!");
+      windowsOpen--;
+      delay(1000);
+    }
+  }
+  else if(digitalRead(RightSwitch)==0 && windowsOpen == 1){
+      lcd.clear();
+      lcd.print("Already open!");
+      delay(1000);
+  }
   if(digitalRead(MiddleSwitch)==0) {
+    delay(300);
+    past = 0;
+    timer0_millis = 1000;
     function();
+  }
+  if(flag==1) {
+    if(windowsOpen == 0) {
+    lcd.clear();
+    lcd.print("Windows close");
+    flag = 0;
+    function_MoterOn();
+    }
+    else if(windowsOpen == 1) {
+      lcd.clear();
+      lcd.print("Windows open");
+      flag = 0;
+      function_MoterOn();
+    }
+  }
+  else {
+    function_MoterOn();
   }
 }
 
@@ -127,6 +200,9 @@ void function_RaindropsModule() {
     flag = 1;
   }
   if(digitalRead(MiddleSwitch)==0) {
+    delay(300);
+    past = 0;
+    timer0_millis = 2000;
     function_MoterOn();
   }
   if(flag==1) {
@@ -302,7 +378,7 @@ void InterfaceOn() {
   }*/
   if(InterfaceCount == 1) {
    past = 0;
-   timer0_millis = 0;
+   timer0_millis = 1000;
    Time();
   }
   else if(InterfaceCount==2){
@@ -348,7 +424,7 @@ void start() {
   }
   else
  {
-  lcd.print("Welcome back!");
+  lcd.print("Welcome back! :)");
   delay(2000);
   InterfaceOn();
  }
