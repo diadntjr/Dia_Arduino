@@ -1,3 +1,5 @@
+extern volatile unsigned long timer0_millis;
+
 #include <DHT11.h>
 #include <Wire.h>
 #include <RTClib.h>
@@ -6,7 +8,7 @@
 #define MiddleSwitch 10
 #define LeftSwitch 11
 #define RightSwitch 9
-#define DHTPin 12
+#define DHTPin A1
 
 DHT11 dht11(DHTPin);
 
@@ -16,7 +18,7 @@ RTC_DS1307 RTC;
 
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday","Wednesday", "Thursday", "Friday", "Saturday"};
 
-static int firstCount = 0;
+static int firstCount = 1;
 static int InterfaceCount = 1;
 
 unsigned long past = 0;
@@ -28,6 +30,8 @@ int err;
 
 int measurePin = A0;
 int ledPower = 6;
+
+int Raindrops_pin = A2;
 
 int samplingTime = 280;
 int deltaTime = 40;
@@ -64,6 +68,7 @@ void setup() {
   pinMode(MiddleSwitch,INPUT_PULLUP);
   pinMode(RightSwitch,INPUT_PULLUP);
   pinMode(ledPower,OUTPUT);
+  pinMode(Raindrops_pin, INPUT);
   LetStart();
 }
 
@@ -115,13 +120,6 @@ void function_MoterOn() {
 }
 
 void function_RaindropsModule() {
-  if(digitalRead(MiddleSwitch)==0) {
-    function_MoterOn();
-  }
-}
-
-void function_PMSensor() {
-  past = 0;
   flag = 0;
   time = millis();
   if(time - past >= 2000) {
@@ -129,6 +127,49 @@ void function_PMSensor() {
     flag = 1;
   }
   if(digitalRead(MiddleSwitch)==0) {
+    function_MoterOn();
+  }
+  if(flag==1) {
+    lcd.clear();
+    if(analogRead(A2)<500 && analogRead(A2)>400) {
+      lcd.print("Very small rain");
+    }
+    else if(analogRead(A2)<401 && analogRead(A2)>350) {
+      lcd.print("small Rain");
+    }
+    else if(analogRead(A2)<351 && analogRead(A2)>300) {
+      lcd.print("middle Rain");
+    }
+    else if(analogRead(A2)<301 && analogRead(A2)>250) {
+      lcd.print("much rain");
+    }
+    else if(analogRead(A2) <250) {
+      lcd.print("Rainning");
+      lcd.setCursor(0,1);
+      lcd.print("Cats and dogs");
+    }
+    else {
+      lcd.print("It's sunny! :)");
+    }
+    flag = 0;
+    function_RaindropsModule();
+  }
+  else {
+    function_RaindropsModule();
+  }
+}
+
+void function_PMSensor() {
+  flag = 0;
+  time = millis();
+  if(time - past >= 2000) {
+    past = time;
+    flag = 1;
+  }
+  if(digitalRead(MiddleSwitch)==0) {
+    delay(300);
+    past = 0;
+    timer0_millis = 2000;
     function_RaindropsModule();
   }
   if(flag == 1) {
@@ -148,6 +189,7 @@ void function_PMSensor() {
   lcd.print("DustDensity: ");
   lcd.setCursor(0,1);
   lcd.print(dustDensity);
+  lcd.print("(mg/m^3)");
   flag = 0;
   function_PMSensor();
   }
@@ -157,29 +199,31 @@ void function_PMSensor() {
 }
 
 void function_DHT11() {
-  past = 0;
   flag = 0;
   time = millis();
   if(time - past >= 3000) {
     past = time;
     flag = 1;
   }
-  lcd.clear();
   if(digitalRead(MiddleSwitch)==0) {
+    delay(300);
+    past = 0;
+    timer0_millis = 2000;
     function_PMSensor();
   }
   if(flag == 1) {
+  lcd.clear();
   if((err=dht11.read(humi, temp))==0) {
     lcd.print("temp: ");
     lcd.print(temp);
     lcd.setCursor(0,1);
     lcd.print("humi: ");
     lcd.print(humi);
+    flag = 0;
   }
   else {
     lcd.print("Error No:");
   }
-  flag = 0;
   function_DHT11();
   }
   else {
@@ -188,24 +232,26 @@ void function_DHT11() {
 }
 
 void function() {
-  past = 0;
   flag = 0;
   time = millis();
   if(time - past >= 1000) {
     past = time;
     flag = 1;
   }
-  lcd.clear();
   if(digitalRead(LeftSwitch) == 0 || digitalRead(RightSwitch) == 0) {
     InterfaceOn();
   }
   if(digitalRead(MiddleSwitch)==0) {
+    past = 0;
+    timer0_millis = 3000;
     delay(300);
     function_DHT11();
   }
   if(flag == 1) {
+  lcd.clear();
   lcd.print("Function Mode");
   flag = 0;
+  function();
   }
   else {
     function();
@@ -255,12 +301,18 @@ void InterfaceOn() {
   lcd.print(count);
   }*/
   if(InterfaceCount == 1) {
+   past = 0;
+   timer0_millis = 0;
    Time();
   }
   else if(InterfaceCount==2){
+   past = 0;
+   timer0_millis = 1000;
    function();
   }
   else if(InterfaceCount==3){
+   past = 0;
+   timer0_millis = 0;
    automatic();
   } 
   InterfaceOn();
