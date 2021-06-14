@@ -23,6 +23,7 @@ char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday","Wednesday", "Thursda
 
 static int firstCount = 1;
 static int InterfaceCount = 1;
+static int automaticCount = 0;
 
 unsigned long past = 0;
 int flag = 0;
@@ -133,8 +134,8 @@ void function_MoterOn() {
       digitalWrite(in4,LOW);
       analogWrite(speedPin,50);
       delay(3000);
-      digitalWrite(in3,HIGH);
-      digitalWrite(in4,HIGH);
+      digitalWrite(in3,LOW);
+      digitalWrite(in4,LOW);
       lcd.clear();
       lcd.print("done!");
       windowsOpen++;
@@ -154,8 +155,8 @@ void function_MoterOn() {
       digitalWrite(in4,HIGH);
       analogWrite(speedPin,50);
       delay(3000);
-      digitalWrite(in3,HIGH);
-      digitalWrite(in4,HIGH);
+      digitalWrite(in3,LOW);
+      digitalWrite(in4,LOW);
       lcd.clear();
       lcd.print("done!");
       windowsOpen--;
@@ -341,18 +342,68 @@ void automatic() {
   if(digitalRead(LeftSwitch) == 0 || digitalRead(RightSwitch) == 0) {
     InterfaceOn();
   }
+  if(digitalRead(MiddleSwitch)==0) {
+    automaticCount++;
+    if(automaticCount>1) {
+      automaticCount = 0;
+    }
+  }
   if(time - past >= 1000) {
     past = time;
     flag = 1;
   }
   if(flag == 1){
-  lcd.clear();
-  lcd.print("automatic ON");
-  flag = 0;
-}
-else {
-automatic();
-}
+    if(automaticCount == 1) {
+      lcd.clear();
+      lcd.print("automatic ON"); 
+    }
+    else if(automaticCount == 0) {
+      lcd.clear();
+      lcd.print("automatic OFF");
+    }
+    flag = 0;
+  }
+  if(automaticCount == 1) {
+    if(windowsOpen == 1) {
+      if(analogRead(A2) <500) {
+        digitalWrite(in3,LOW);
+        digitalWrite(in4,HIGH);
+        delay(500);
+        digitalWrite(in3,LOW);
+        digitalWrite(in4,LOW);
+        windowsOpen = 0;
+      }
+      digitalWrite(ledPower,LOW);
+      delayMicroseconds(samplingTime);
+
+      voMeasured = analogRead(measurePin);
+      delayMicroseconds(deltaTime);
+      digitalWrite(ledPower,HIGH);
+      delayMicroseconds(sleepTime);
+
+      calcVoltage = voMeasured * (5.0/1024.0);
+
+      dustDensity = 0.17 * calcVoltage - 0.1;
+      else if(dustDensity > 0.10) {
+        digitalWrite(in3,LOW);
+        digitalWrite(in4,HIGH);
+        delay(500);
+        windowsOpen = 0;
+      }
+    }
+    else if(windowsOpen == 0 && analogRead(A2) >500 && dustDensity < 0.10 ) {
+      digitalWrite(in3,HIGH);
+      digitalWrite(in4,LOW);
+      delay(500);
+      digitalWrite(in3,LOW);
+      digitalWrite(in4,LOW);
+      windowsOpen = 0;
+    }
+    
+  }
+  else {
+    automatic();
+  }
 }
 
 void InterfaceOn() {
