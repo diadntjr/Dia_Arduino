@@ -11,14 +11,14 @@ void setup() {
 void loop() {
   digitalWrite(in3,HIGH);
   digitalWrite(in4,LOW);
-  analogWrite(speedPin,100);
+  analogWrite(speedPin,50);
   delay(1000);
   digitalWrite(in3,LOW);
   digitalWrite(in4,LOW);
   delay(1000);
   digitalWrite(in3,LOW);
   digitalWrite(in4,HIGH);
-  analogWrite(speedPin,100);
+  analogWrite(speedPin,50);
   delay(1000);
   digitalWrite(in3,LOW);
   digitalWrite(in4,LOW);
