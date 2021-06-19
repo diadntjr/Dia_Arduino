@@ -1,5 +1,5 @@
-#define in3 13
-#define in4 12
+#define in3 4
+#define in4 3
 #define speedPin 2
 
 void setup() {
