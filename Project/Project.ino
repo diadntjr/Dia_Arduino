@@ -9,16 +9,15 @@ extern volatile unsigned long timer0_millis;
 #define LeftSwitch 11
 #define RightSwitch 9
 #define DHTPin A1
-#define in3 13
-#define in4 12
 #define speedPin 2
+#define LEDR 12
+#define LEDG 13
 
 DHT11 dht11(DHTPin);
 
 LiquidCrystal_I2C lcd(0x27,16,2);
 
 RTC_DS1307 RTC;
-
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday","Wednesday", "Thursday", "Friday", "Saturday"};
 
 static int firstCount = 1;
@@ -44,8 +43,6 @@ int sleepTime = 9680;
 float voMeasured = 0.0;
 float calcVoltage = 0.0;
 float dustDensity = 0.0;
-
-int windowsOpen = 0;
 
 void InterfaceOn();
 
@@ -75,6 +72,8 @@ void setup() {
   pinMode(RightSwitch,INPUT_PULLUP);
   pinMode(ledPower,OUTPUT);
   pinMode(Raindrops_pin, INPUT);
+  pinMode(LEDR, OUTPUT);
+  pinMode(LEDG,OUTPUT);
   LetStart();
 }
 
@@ -119,80 +118,6 @@ void Time() {
 
 void function();
 
-void function_MoterOn() {
-  flag = 0;
-  time = millis();
-  if(time - past >= 2000) {
-    past = time;
-    flag = 1;
-  }
-   if(digitalRead(RightSwitch)==0) {
-     if(windowsOpen == 0) {
-      lcd.clear();
-      lcd.print("Opening...");
-      digitalWrite(in3,HIGH);
-      digitalWrite(in4,LOW);
-      analogWrite(speedPin,50);
-      delay(3000);
-      digitalWrite(in3,LOW);
-      digitalWrite(in4,LOW);
-      lcd.clear();
-      lcd.print("done!");
-      windowsOpen++;
-      delay(1000);
-    }
-   }
-  else if (digitalRead(LeftSwitch)==0 && windowsOpen == 0){
-      lcd.clear();
-      lcd.print("Already close!");
-      delay(1000);
-    }
-  if(digitalRead(LeftSwitch)==0) {
-    if(windowsOpen == 1) {
-      lcd.clear();
-      lcd.print("Closing...");
-      digitalWrite(in3,LOW);
-      digitalWrite(in4,HIGH);
-      analogWrite(speedPin,50);
-      delay(3000);
-      digitalWrite(in3,LOW);
-      digitalWrite(in4,LOW);
-      lcd.clear();
-      lcd.print("done!");
-      windowsOpen--;
-      delay(1000);
-    }
-  }
-  else if(digitalRead(RightSwitch)==0 && windowsOpen == 1){
-      lcd.clear();
-      lcd.print("Already open!");
-      delay(1000);
-  }
-  if(digitalRead(MiddleSwitch)==0) {
-    delay(300);
-    past = 0;
-    timer0_millis = 1000;
-    function();
-  }
-  if(flag==1) {
-    if(windowsOpen == 0) {
-    lcd.clear();
-    lcd.print("Windows close");
-    flag = 0;
-    function_MoterOn();
-    }
-    else if(windowsOpen == 1) {
-      lcd.clear();
-      lcd.print("Windows open");
-      flag = 0;
-      function_MoterOn();
-    }
-  }
-  else {
-    function_MoterOn();
-  }
-}
-
 void function_RaindropsModule() {
   flag = 0;
   time = millis();
@@ -203,8 +128,8 @@ void function_RaindropsModule() {
   if(digitalRead(MiddleSwitch)==0) {
     delay(300);
     past = 0;
-    timer0_millis = 2000;
-    function_MoterOn();
+    timer0_millis = 1000;
+    function();
   }
   if(flag==1) {
     lcd.clear();
@@ -364,15 +289,6 @@ void automatic() {
     flag = 0;
   }
   if(automaticCount == 1) {
-    if(windowsOpen == 1) {
-      if(analogRead(A2) <500) {
-        digitalWrite(in3,LOW);
-        digitalWrite(in4,HIGH);
-        delay(500);
-        digitalWrite(in3,LOW);
-        digitalWrite(in4,LOW);
-        windowsOpen = 0;
-      }
       digitalWrite(ledPower,LOW);
       delayMicroseconds(samplingTime);
 
@@ -384,23 +300,20 @@ void automatic() {
       calcVoltage = voMeasured * (5.0/1024.0);
 
       dustDensity = 0.17 * calcVoltage - 0.1;
-      else if(dustDensity > 0.10) {
-        digitalWrite(in3,LOW);
-        digitalWrite(in4,HIGH);
-        delay(500);
-        windowsOpen = 0;
+      if(dustDensity > 0.10 || analogRead(A2) < 500) {
+        digitalWrite(LEDG, LOW);
+        digitalWrite(LEDR, HIGH);
       }
+    else if(digitalRead(LEDR) == 1 && analogRead(A2) >500 && dustDensity < 0.10 ) {
+      digitalWrite(LEDG, HIGH);
+      digitalWrite(LEDR, LOW);
+      
+      }
+    else {
+      digitalWrite(LEDG, HIGH);
     }
-    else if(windowsOpen == 0 && analogRead(A2) >500 && dustDensity < 0.10 ) {
-      digitalWrite(in3,HIGH);
-      digitalWrite(in4,LOW);
-      delay(500);
-      digitalWrite(in3,LOW);
-      digitalWrite(in4,LOW);
-      windowsOpen = 0;
-    }
-    
   }
+    
   else {
     automatic();
   }
