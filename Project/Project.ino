@@ -10,8 +10,9 @@ extern volatile unsigned long timer0_millis;
 #define RightSwitch 9
 #define DHTPin A1
 #define speedPin 2
-#define LEDR 12
-#define LEDG 13
+#define LEDR 13
+#define LEDG 12
+#define BUTTON 3
 
 DHT11 dht11(DHTPin);
 
@@ -20,7 +21,6 @@ LiquidCrystal_I2C lcd(0x27,16,2);
 RTC_DS1307 RTC;
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday","Wednesday", "Thursday", "Friday", "Saturday"};
 
-static int firstCount = 1;
 static int InterfaceCount = 1;
 static int automaticCount = 0;
 
@@ -53,7 +53,7 @@ void setup() {
 
   Wire.begin();
 
-  RTC.adjust(DateTime(F(__DATE__),F(__TIME__))); 
+  //RTC.adjust(DateTime(F(__DATE__),F(__TIME__))); 
 
   RTC.begin();
   if(! RTC.begin()) {
@@ -74,6 +74,7 @@ void setup() {
   pinMode(Raindrops_pin, INPUT);
   pinMode(LEDR, OUTPUT);
   pinMode(LEDG,OUTPUT);
+  pinMode(BUTTON, INPUT_PULLUP);
   LetStart();
 }
 
@@ -265,12 +266,16 @@ void automatic() {
   flag = 0;
   time = millis();
   if(digitalRead(LeftSwitch) == 0 || digitalRead(RightSwitch) == 0) {
+    delay(300);
     InterfaceOn();
   }
   if(digitalRead(MiddleSwitch)==0) {
-    automaticCount++;
-    if(automaticCount>1) {
-      automaticCount = 0;
+    delay(300);
+    if(automaticCount == 0) {
+      automaticCount++;
+    }
+    else if(automaticCount == 1) {
+      automaticCount--;
     }
   }
   if(time - past >= 1000) {
@@ -313,6 +318,10 @@ void automatic() {
       digitalWrite(LEDG, HIGH);
     }
   }
+  else if(automaticCount == 0) {
+    digitalWrite(LEDG, LOW);
+    digitalWrite(LEDR, LOW);
+  }
     
   else {
     automatic();
@@ -352,7 +361,7 @@ void InterfaceOn() {
   }
   else if(InterfaceCount==3){
    past = 0;
-   timer0_millis = 0;
+   timer0_millis = 1000;
    automatic();
   } 
   InterfaceOn();
@@ -379,11 +388,10 @@ void first() {
   lcd.clear();
   lcd.print("Ok, so let's go!");
   delay(1000);
-  firstCount++;
   InterfaceOn();
 }
 void start() {
-  if(firstCount == 0) {
+  if(digitalRead(BUTTON)==1) {
     first();
   }
   else
